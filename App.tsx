@@ -4,9 +4,9 @@ import Login from './components/Login';
 import VideoFeed from './components/VideoFeed';
 import VideoGrid from './components/VideoGrid';
 import LibrarySelect from './components/LibrarySelect';
-import { ServerConfig, EmbyLibrary, EmbyItem, FeedType } from './types';
+import { ServerConfig, EmbyLibrary, EmbyItem, FeedType, OrientationMode } from './types';
 import { ClientFactory } from './services/clientFactory';
-import { Menu, LayoutGrid, Smartphone, Volume2, VolumeX } from 'lucide-react';
+import { Menu, LayoutGrid, Smartphone, Volume2, VolumeX, Maximize, Minimize } from 'lucide-react';
 
 type ViewMode = 'feed' | 'grid';
 const PAGE_SIZE = 15;
@@ -35,7 +35,26 @@ function App() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [favoriteIds, setFavoriteIds] = useState<Set<string>>(new Set());
   const [feedType, setFeedType] = useState<FeedType>('latest');
-  const [viewMode, setViewMode] = useState<ViewMode>('feed');
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isAutoPlay, setIsAutoPlay] = useState(false); // New Auto-play State
+  
+  // Initial Detection for TV/Landscape
+  const [isLandscape, setIsLandscape] = useState(() => 
+     typeof window !== 'undefined' ? window.innerWidth > window.innerHeight : false
+  );
+
+  // Orientation Filter State
+  const [orientationMode, setOrientationMode] = useState<OrientationMode>(() => {
+      const saved = localStorage.getItem('embyOrientationMode');
+      if (saved) return saved as OrientationMode;
+      // Default behavior logic based on initial load
+      if (typeof window !== 'undefined' && window.innerWidth > window.innerHeight) {
+          return 'both';
+      }
+      return 'vertical';
+  });
+  
+  const [viewMode, setViewMode] = useState<ViewMode>(isLandscape ? 'grid' : 'feed');
   const [currentIndex, setCurrentIndex] = useState(0);
   
   // Settings State
@@ -46,6 +65,24 @@ function App() {
 
   // Audio State
   const [isMuted, setIsMuted] = useState(true);
+
+  // Handle Orientation Change
+  useEffect(() => {
+    const handleResize = () => {
+        setIsLandscape(window.innerWidth > window.innerHeight);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Handle Fullscreen Events
+  useEffect(() => {
+      const handleFullScreenChange = () => {
+          setIsFullscreen(!!document.fullscreenElement);
+      };
+      document.addEventListener('fullscreenchange', handleFullScreenChange);
+      return () => document.removeEventListener('fullscreenchange', handleFullScreenChange);
+  }, []);
 
   useEffect(() => {
     if (config) {
@@ -58,6 +95,10 @@ function App() {
   useEffect(() => {
       localStorage.setItem('embyHiddenLibs', JSON.stringify(Array.from(hiddenLibIds)));
   }, [hiddenLibIds]);
+
+  useEffect(() => {
+      localStorage.setItem('embyOrientationMode', orientationMode);
+  }, [orientationMode]);
 
   useEffect(() => {
     if (client) {
@@ -108,12 +149,13 @@ function App() {
 
       // 2. Fetch Videos
       try {
-          const { items: newVideos, nextStartIndex, totalCount } = await client.getVerticalVideos(
+          const { items: newVideos, nextStartIndex, totalCount } = await client.getVideos(
             selectedLib ? selectedLib.Id : undefined,
             libName,
             feedType,
             currentServerSkip,
-            PAGE_SIZE
+            PAGE_SIZE,
+            orientationMode
           );
           
           if (reset) {
@@ -151,11 +193,12 @@ function App() {
       setFeedType(type);
   };
 
+  // Trigger reload if feedType, library, OR orientationMode changes
   useEffect(() => {
      if (client) {
          loadVideos(true);
      }
-  }, [feedType, selectedLib, client]); // Depend on client instance
+  }, [feedType, selectedLib, client, orientationMode]); 
 
   const handleToggleFavorite = async (itemId: string, isCurrentlyFavorite: boolean) => {
       if (!client) return;
@@ -199,6 +242,18 @@ function App() {
       setIsMenuOpen(false);
   };
 
+  const toggleFullScreen = () => {
+    if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch((err) => {
+            console.error(`Error attempting to enable fullscreen: ${err.message}`);
+        });
+    } else {
+        if (document.exitFullscreen) {
+            document.exitFullscreen();
+        }
+    }
+  };
+
   if (!config || !client) {
     return <Login onLogin={setConfig} />;
   }
@@ -206,11 +261,11 @@ function App() {
   return (
     <div className="relative h-[100dvh] w-full bg-black overflow-hidden font-sans text-white">
       
-      {/* TOP NAVIGATION BAR */}
-      <div className="absolute top-0 left-0 right-0 z-40 h-16 bg-gradient-to-b from-black/90 to-transparent flex items-center justify-between px-4 pt-2">
+      {/* TOP NAVIGATION BAR - Hidden in Auto Play Mode */}
+      <div className={`absolute top-0 left-0 right-0 z-40 h-16 bg-gradient-to-b from-black/90 to-transparent flex items-center justify-between px-4 pt-2 transition-opacity duration-300 ${isAutoPlay ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
         <button 
             onClick={() => setIsMenuOpen(true)}
-            className="p-2 text-white/80 hover:text-white transition-colors"
+            className="p-2 text-white/80 hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 rounded-full"
         >
              <Menu className="w-6 h-6 drop-shadow-md" />
         </button>
@@ -218,21 +273,21 @@ function App() {
         <div className="flex items-center gap-4 font-bold text-md drop-shadow-md transform translate-x-1">
              <button 
                 onClick={() => handleFeedTypeChange('favorites')}
-                className={`transition-colors ${feedType === 'favorites' ? 'text-white scale-105' : 'text-white/50 hover:text-white/80'}`}
+                className={`transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 rounded px-2 ${feedType === 'favorites' ? 'text-white scale-105' : 'text-white/50 hover:text-white/80'}`}
              >
                  收藏
              </button>
              <div className="w-[1px] h-3 bg-white/20"></div>
              <button 
                 onClick={() => handleFeedTypeChange('random')}
-                className={`transition-colors ${feedType === 'random' ? 'text-white scale-105' : 'text-white/50 hover:text-white/80'}`}
+                className={`transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 rounded px-2 ${feedType === 'random' ? 'text-white scale-105' : 'text-white/50 hover:text-white/80'}`}
              >
                  随机
              </button>
              <div className="w-[1px] h-3 bg-white/20"></div>
              <button 
                 onClick={() => handleFeedTypeChange('latest')}
-                className={`transition-colors ${feedType === 'latest' ? 'text-white scale-105' : 'text-white/50 hover:text-white/80'}`}
+                className={`transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 rounded px-2 ${feedType === 'latest' ? 'text-white scale-105' : 'text-white/50 hover:text-white/80'}`}
              >
                  最新
              </button>
@@ -240,8 +295,18 @@ function App() {
         
         <div className="flex items-center gap-1">
             <button
+                onClick={toggleFullScreen}
+                className="p-2 text-white/80 hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 rounded-full"
+            >
+                {isFullscreen ? (
+                     <Minimize className="w-6 h-6 drop-shadow-md" />
+                ) : (
+                     <Maximize className="w-6 h-6 drop-shadow-md" />
+                )}
+            </button>
+            <button
                 onClick={() => setIsMuted(!isMuted)}
-                className="p-2 text-white/80 hover:text-white transition-colors"
+                className="p-2 text-white/80 hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 rounded-full"
             >
                 {isMuted ? (
                      <VolumeX className="w-6 h-6 drop-shadow-md text-red-500" />
@@ -251,7 +316,7 @@ function App() {
             </button>
             <button 
                 onClick={() => setViewMode(viewMode === 'feed' ? 'grid' : 'feed')}
-                className="p-2 text-white/80 hover:text-white transition-colors"
+                className="p-2 text-white/80 hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 rounded-full"
             >
                 {viewMode === 'feed' ? (
                     <LayoutGrid className="w-6 h-6 drop-shadow-md" />
@@ -262,7 +327,7 @@ function App() {
         </div>
       </div>
 
-      {selectedLib && (
+      {selectedLib && !isAutoPlay && (
           <div className="absolute top-16 left-0 right-0 z-30 flex justify-center pointer-events-none">
               <span className="bg-black/30 backdrop-blur-sm px-3 py-1 rounded-full text-[10px] text-white/70 border border-white/10 uppercase tracking-widest">
                   {selectedLib.Name}
@@ -281,10 +346,11 @@ function App() {
                 hasMore={hasMore}
                 onLoadMore={() => loadVideos(false)}
                 onRefresh={refreshContent}
+                currentIndex={currentIndex}
             />
         ) : (
             <VideoFeed 
-                key={`${selectedLib?.Id}-${feedType}`} 
+                key={`${selectedLib?.Id}-${feedType}-${orientationMode}`} 
                 videos={videos} 
                 client={client}
                 onRefresh={refreshContent}
@@ -298,6 +364,8 @@ function App() {
                 feedType={feedType}
                 hasMore={hasMore}
                 onLoadMore={() => loadVideos(false)}
+                isAutoPlay={isAutoPlay}
+                onToggleAutoPlay={() => setIsAutoPlay(!isAutoPlay)}
             />
         )}
       </div>
@@ -313,6 +381,8 @@ function App() {
         onLogout={handleLogout}
         serverUrl={config.url}
         username={config.username}
+        orientationMode={orientationMode}
+        onOrientationChange={setOrientationMode}
       />
     </div>
   );

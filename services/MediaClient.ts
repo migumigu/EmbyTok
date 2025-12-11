@@ -1,5 +1,5 @@
 
-import { EmbyItem, EmbyLibrary, FeedType, ServerConfig, VideoResponse } from '../types';
+import { EmbyItem, EmbyLibrary, FeedType, ServerConfig, VideoResponse, OrientationMode } from '../types';
 
 export abstract class MediaClient {
     config: ServerConfig;
@@ -12,12 +12,13 @@ export abstract class MediaClient {
     
     abstract getLibraries(): Promise<EmbyLibrary[]>;
     
-    abstract getVerticalVideos(
+    abstract getVideos(
         parentId: string | undefined, 
         libraryName: string, 
         feedType: FeedType, 
         skip: number, 
-        limit: number
+        limit: number,
+        orientationMode: OrientationMode
     ): Promise<VideoResponse>;
 
     abstract getVideoUrl(item: EmbyItem): string;

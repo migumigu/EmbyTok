@@ -57,14 +57,14 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
               <button 
                 type="button"
                 onClick={() => setServerType('emby')}
-                className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-md text-sm font-bold transition-all ${serverType === 'emby' ? 'bg-indigo-600 text-white shadow' : 'text-zinc-400 hover:text-zinc-200'}`}
+                className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-md text-sm font-bold transition-all focus:ring-2 focus:ring-indigo-500 outline-none ${serverType === 'emby' ? 'bg-indigo-600 text-white shadow' : 'text-zinc-400 hover:text-zinc-200'}`}
               >
                   Emby / Jellyfin
               </button>
               <button 
                 type="button"
                 onClick={() => setServerType('plex')}
-                className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-md text-sm font-bold transition-all ${serverType === 'plex' ? 'bg-yellow-600 text-white shadow' : 'text-zinc-400 hover:text-zinc-200'}`}
+                className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-md text-sm font-bold transition-all focus:ring-2 focus:ring-indigo-500 outline-none ${serverType === 'plex' ? 'bg-yellow-600 text-white shadow' : 'text-zinc-400 hover:text-zinc-200'}`}
               >
                   Plex
               </button>
@@ -124,7 +124,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
           <button
             type="submit"
             disabled={loading}
-            className={`w-full text-white font-bold py-3.5 rounded-xl transition-all flex items-center justify-center gap-2 ${serverType === 'plex' ? 'bg-yellow-600 hover:bg-yellow-700' : 'bg-indigo-600 hover:bg-indigo-700'}`}
+            className={`w-full text-white font-bold py-3.5 rounded-xl transition-all flex items-center justify-center gap-2 focus:ring-2 focus:ring-offset-2 focus:ring-offset-black focus:ring-white outline-none ${serverType === 'plex' ? 'bg-yellow-600 hover:bg-yellow-700' : 'bg-indigo-600 hover:bg-indigo-700'}`}
           >
             {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : '连接'}
           </button>

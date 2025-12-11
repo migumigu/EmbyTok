@@ -1,6 +1,7 @@
+
 import React, { useState, useEffect } from 'react';
-import { EmbyLibrary } from '../types';
-import { X, Folder, Settings, LogOut, Eye, EyeOff, ChevronLeft, Server, User } from 'lucide-react';
+import { EmbyLibrary, OrientationMode } from '../types';
+import { X, Folder, Settings, LogOut, Eye, EyeOff, ChevronLeft, Server, User, Smartphone, Monitor } from 'lucide-react';
 
 interface LibrarySelectProps {
   libraries: EmbyLibrary[];
@@ -15,6 +16,9 @@ interface LibrarySelectProps {
   onLogout: () => void;
   serverUrl: string;
   username: string;
+  
+  orientationMode: OrientationMode;
+  onOrientationChange: (mode: OrientationMode) => void;
 }
 
 type MenuMode = 'list' | 'settings';
@@ -29,7 +33,9 @@ const LibrarySelect: React.FC<LibrarySelectProps> = ({
     onToggleHidden,
     onLogout,
     serverUrl,
-    username
+    username,
+    orientationMode,
+    onOrientationChange
 }) => {
   const [mode, setMode] = useState<MenuMode>('list');
 
@@ -52,14 +58,14 @@ const LibrarySelect: React.FC<LibrarySelectProps> = ({
               <h2 className="text-white font-bold text-xl">媒体库</h2>
           ) : (
               <div className="flex items-center gap-2">
-                  <button onClick={() => setMode('list')} className="p-1 -ml-2 text-zinc-400 hover:text-white">
+                  <button onClick={() => setMode('list')} className="p-1 -ml-2 text-zinc-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 rounded">
                       <ChevronLeft className="w-6 h-6" />
                   </button>
                   <h2 className="text-white font-bold text-xl">设置</h2>
               </div>
           )}
           
-          <button onClick={onClose} className="text-white/70 hover:text-white p-1">
+          <button onClick={onClose} className="text-white/70 hover:text-white p-1 focus:outline-none focus:ring-2 focus:ring-indigo-500 rounded">
             <X className="w-6 h-6" />
           </button>
         </div>
@@ -75,7 +81,7 @@ const LibrarySelect: React.FC<LibrarySelectProps> = ({
                         onSelect(null);
                         onClose();
                     }}
-                    className={`w-full text-left p-4 rounded-xl mb-2 flex items-center gap-3 transition-colors ${
+                    className={`w-full text-left p-4 rounded-xl mb-2 flex items-center gap-3 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
                     selectedId === null ? 'bg-indigo-600 text-white' : 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700'
                     }`}
                 >
@@ -90,7 +96,7 @@ const LibrarySelect: React.FC<LibrarySelectProps> = ({
                         onSelect(lib);
                         onClose();
                     }}
-                    className={`w-full text-left p-4 rounded-xl mb-2 flex items-center gap-3 transition-colors ${
+                    className={`w-full text-left p-4 rounded-xl mb-2 flex items-center gap-3 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
                         selectedId === lib.Id ? 'bg-indigo-600 text-white' : 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700'
                     }`}
                     >
@@ -104,6 +110,33 @@ const LibrarySelect: React.FC<LibrarySelectProps> = ({
           {/* --- SETTINGS MODE --- */}
           {mode === 'settings' && (
               <div className="space-y-6 p-2">
+                  
+                  {/* Orientation Settings */}
+                  <div className="space-y-3">
+                      <h3 className="text-xs font-bold text-zinc-500 uppercase tracking-wider px-1">显示偏好</h3>
+                      <div className="bg-zinc-800 rounded-xl p-1 flex">
+                           <button 
+                             onClick={() => onOrientationChange('vertical')}
+                             className={`flex-1 py-2 text-xs font-bold rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 ${orientationMode === 'vertical' ? 'bg-indigo-600 text-white shadow' : 'text-zinc-400 hover:text-zinc-200'}`}
+                           >
+                               仅竖屏
+                           </button>
+                           <button 
+                             onClick={() => onOrientationChange('horizontal')}
+                             className={`flex-1 py-2 text-xs font-bold rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 ${orientationMode === 'horizontal' ? 'bg-indigo-600 text-white shadow' : 'text-zinc-400 hover:text-zinc-200'}`}
+                           >
+                               仅横屏
+                           </button>
+                           <button 
+                             onClick={() => onOrientationChange('both')}
+                             className={`flex-1 py-2 text-xs font-bold rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 ${orientationMode === 'both' ? 'bg-indigo-600 text-white shadow' : 'text-zinc-400 hover:text-zinc-200'}`}
+                           >
+                               全部
+                           </button>
+                      </div>
+                      <p className="text-[10px] text-zinc-500 px-1">控制要在视频流中显示的视频类型。</p>
+                  </div>
+
                   {/* Server Info Section */}
                   <div className="space-y-3">
                       <h3 className="text-xs font-bold text-zinc-500 uppercase tracking-wider px-1">连接信息</h3>
@@ -120,7 +153,7 @@ const LibrarySelect: React.FC<LibrarySelectProps> = ({
                           <div className="pt-2 border-t border-zinc-700/50">
                               <button 
                                 onClick={onLogout}
-                                className="w-full py-2.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 text-sm font-medium flex items-center justify-center gap-2 transition-colors"
+                                className="w-full py-2.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 text-sm font-medium flex items-center justify-center gap-2 transition-colors focus:outline-none focus:ring-2 focus:ring-red-500"
                               >
                                   <LogOut className="w-4 h-4" /> 断开连接
                               </button>
@@ -144,7 +177,7 @@ const LibrarySelect: React.FC<LibrarySelectProps> = ({
                                       </div>
                                       <button 
                                         onClick={() => onToggleHidden(lib.Id)}
-                                        className={`p-2 rounded-full transition-colors ${isHidden ? 'text-zinc-600 hover:text-zinc-400' : 'text-indigo-400 hover:text-indigo-300 bg-indigo-500/10'}`}
+                                        className={`p-2 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 ${isHidden ? 'text-zinc-600 hover:text-zinc-400' : 'text-indigo-400 hover:text-indigo-300 bg-indigo-500/10'}`}
                                       >
                                           {isHidden ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                                       </button>
@@ -162,7 +195,7 @@ const LibrarySelect: React.FC<LibrarySelectProps> = ({
             <div className="p-4 border-t border-zinc-800 bg-zinc-900">
                 <button 
                     onClick={() => setMode('settings')}
-                    className="flex items-center gap-3 w-full p-3 text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-xl transition-colors"
+                    className="flex items-center gap-3 w-full p-3 text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-xl transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 >
                     <Settings className="w-5 h-5" />
                     <span className="font-medium">设置</span>

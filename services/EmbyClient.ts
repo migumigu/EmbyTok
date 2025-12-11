@@ -1,6 +1,6 @@
 
 import { MediaClient } from './MediaClient';
-import { EmbyItem, EmbyLibrary, FeedType, ServerConfig, VideoResponse } from '../types';
+import { EmbyItem, EmbyLibrary, FeedType, ServerConfig, VideoResponse, OrientationMode } from '../types';
 
 export class EmbyClient extends MediaClient {
     
@@ -54,15 +54,29 @@ export class EmbyClient extends MediaClient {
         return data.Items || [];
     }
 
-    async getVerticalVideos(parentId: string | undefined, libraryName: string, feedType: FeedType, skip: number, limit: number): Promise<VideoResponse> {
+    private filterItems(items: EmbyItem[], mode: OrientationMode): EmbyItem[] {
+        if (mode === 'both') return items;
+        
+        return items.filter(item => {
+            const w = item.Width || 0;
+            const h = item.Height || 0;
+            if (w === 0) return true; // Keep items with no info to be safe
+            
+            if (mode === 'vertical') {
+                return h >= w * 0.8; // Allow slightly wide videos that are still "vertical-ish" (4:5)
+            } else if (mode === 'horizontal') {
+                return w > h;
+            }
+            return true;
+        });
+    }
+
+    async getVideos(parentId: string | undefined, libraryName: string, feedType: FeedType, skip: number, limit: number, orientationMode: OrientationMode): Promise<VideoResponse> {
         // --- Favorites Handling ---
         if (feedType === 'favorites') {
             const playlistItems = await this.getTokPlaylistItemsInternal(libraryName);
-            const filtered = playlistItems.filter(item => {
-                const w = item.Width || 0;
-                const h = item.Height || 0;
-                return h >= w * 0.8 && w > 0; 
-            });
+            
+            const filtered = this.filterItems(playlistItems, orientationMode);
             const reversed = filtered.reverse();
             const paged = reversed.slice(skip, skip + limit);
             return {
@@ -73,6 +87,7 @@ export class EmbyClient extends MediaClient {
         }
 
         // --- Standard Feed ---
+        // Fetch a bit more if we are filtering
         const FETCH_BATCH_SIZE = feedType === 'random' ? 80 : 50; 
         const params = new URLSearchParams({
             IncludeItemTypes: 'Movie,Video,Episode',
@@ -106,11 +121,7 @@ export class EmbyClient extends MediaClient {
         const rawItems: EmbyItem[] = data.Items || [];
         const totalCount = data.TotalRecordCount || 0;
 
-        const filteredItems = rawItems.filter(item => {
-            const w = item.Width || 0;
-            const h = item.Height || 0;
-            return h >= w * 0.8 && w > 0; 
-        });
+        const filteredItems = this.filterItems(rawItems, orientationMode);
 
         return {
             items: filteredItems,

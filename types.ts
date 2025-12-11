@@ -60,6 +60,8 @@ export interface EmbyItem {
 
 export type FeedType = 'latest' | 'random' | 'favorites';
 
+export type OrientationMode = 'vertical' | 'horizontal' | 'both';
+
 export interface VideoResponse {
     items: EmbyItem[];
     nextStartIndex: number;

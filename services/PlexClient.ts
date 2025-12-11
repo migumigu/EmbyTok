@@ -1,6 +1,6 @@
 
 import { MediaClient } from './MediaClient';
-import { EmbyItem, EmbyLibrary, FeedType, ServerConfig, VideoResponse } from '../types';
+import { EmbyItem, EmbyLibrary, FeedType, ServerConfig, VideoResponse, OrientationMode } from '../types';
 
 export class PlexClient extends MediaClient {
     
@@ -71,7 +71,24 @@ export class PlexClient extends MediaClient {
         }));
     }
 
-    async getVerticalVideos(parentId: string | undefined, libraryName: string, feedType: FeedType, skip: number, limit: number): Promise<VideoResponse> {
+    private filterItems(items: EmbyItem[], mode: OrientationMode): EmbyItem[] {
+        if (mode === 'both') return items;
+        
+        return items.filter(item => {
+            const w = item.Width || 0;
+            const h = item.Height || 0;
+            if (w === 0) return true; 
+
+            if (mode === 'vertical') {
+                return h >= w * 0.8; 
+            } else if (mode === 'horizontal') {
+                return w > h;
+            }
+            return true;
+        });
+    }
+
+    async getVideos(parentId: string | undefined, libraryName: string, feedType: FeedType, skip: number, limit: number, orientationMode: OrientationMode): Promise<VideoResponse> {
         // --- Favorites Handling ---
         if (feedType === 'favorites') {
             const playlist = await this.findPlaylist(libraryName);
@@ -81,8 +98,6 @@ export class PlexClient extends MediaClient {
             }
 
             // Fetch Playlist Items
-            // Use ratingKey to construct robust URL. playlist.key often already contains /items which causes double /items/items if appended blindly.
-            // Add large container size to ensure we get the latest items (which are appended to end)
             const response = await fetch(`${this.getCleanUrl()}/playlists/${playlist.ratingKey}/items?X-Plex-Container-Start=0&X-Plex-Container-Size=2000`, {
                 headers: this.getHeaders()
             });
@@ -95,12 +110,8 @@ export class PlexClient extends MediaClient {
             // Map to EmbyItem
             const mappedItems = this.mapPlexItems(items);
 
-            // Filter Vertical
-            const filtered = mappedItems.filter(item => {
-                const w = item.Width || 0;
-                const h = item.Height || 0;
-                return h >= w * 0.8 && w > 0;
-            });
+            // Filter 
+            const filtered = this.filterItems(mappedItems, orientationMode);
 
             // Reverse to show newest added first
             const reversed = filtered.reverse();
@@ -142,11 +153,7 @@ export class PlexClient extends MediaClient {
 
         const mappedItems = this.mapPlexItems(items);
 
-        const filtered = mappedItems.filter(item => {
-            const w = item.Width || 0;
-            const h = item.Height || 0;
-            return h >= w * 0.8 && w > 0;
-        });
+        const filtered = this.filterItems(mappedItems, orientationMode);
 
         return {
             items: filtered,
