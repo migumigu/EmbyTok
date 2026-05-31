@@ -9,7 +9,7 @@ import { ClientFactory } from '../../services/clientFactory';
 import { Menu, LayoutGrid, Smartphone, Volume2, VolumeX, Maximize, Minimize, ChevronLeft } from 'lucide-react';
 
 type ViewMode = 'feed' | 'grid';
-const PAGE_SIZE = 15;
+const PAGE_SIZE = 200;
 
 function MobileRoot() {
   const [config, setConfig] = useState<ServerConfig | null>(() => {
@@ -50,14 +50,13 @@ function MobileRoot() {
   const loadVideos = async (reset: boolean = false) => {
       if (!client || loading) return;
       setLoading(true);
-      const skip = reset ? 0 : serverStartIndex;
-      if (reset) { setVideos([]); setHasMore(true); setServerStartIndex(0); }
+      const skip = 0;
+      if (reset) { setVideos([]); setHasMore(false); setServerStartIndex(0); }
       const exclude = !selectedLib ? Array.from(hiddenLibIds).join(',') : undefined;
       try {
-          const { items: newVideos, nextStartIndex, totalCount } = await client.getVideos(currentParentId, selectedLib, feedType, skip, PAGE_SIZE, orientationMode, exclude);
-          setVideos(prev => reset ? newVideos : [...prev, ...newVideos]);
-          setServerStartIndex(nextStartIndex);
-          setHasMore(nextStartIndex < totalCount);
+          const { items: newVideos, totalCount } = await client.getVideos(currentParentId, selectedLib, feedType, skip, PAGE_SIZE, orientationMode, exclude);
+          setVideos(newVideos);
+          setHasMore(false);
       } catch (e) { setHasMore(false); } finally { setLoading(false); }
   };
 

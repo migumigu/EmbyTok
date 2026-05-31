@@ -9,7 +9,7 @@ import { ClientFactory } from '../../services/clientFactory';
 import { Menu, LayoutGrid, Smartphone, Volume2, VolumeX, Maximize, Minimize, ChevronLeft } from 'lucide-react';
 
 type ViewMode = 'feed' | 'grid';
-const PAGE_SIZE = 15;
+const PAGE_SIZE = 200;
 
 interface NavItem {
     id: string;
@@ -69,16 +69,15 @@ function StandardRoot({ onToggleMode }: StandardRootProps) {
   const loadVideos = async (reset: boolean = false, overrideParentId?: string) => {
       if (!client || loading) return;
       setLoading(true);
-      const skip = reset ? 0 : serverStartIndex;
+      const skip = 0;
       const effectiveParentId = overrideParentId !== undefined ? overrideParentId : (navStack.length > 0 ? navStack[navStack.length - 1].id : undefined);
-      if (reset) { setVideos([]); setHasMore(true); setServerStartIndex(0); setCurrentIndex(0); }
+      if (reset) { setVideos([]); setHasMore(false); setServerStartIndex(0); setCurrentIndex(0); }
       let includeIds = !selectedLib ? libraries.filter(l => !hiddenLibIds.has(l.Id)).map(l => l.Id).join(',') : undefined;
       try {
           if (reset) setFavoriteIds(await client.getFavorites(selectedLib?.Name || "收藏"));
-          const { items: newVideos, nextStartIndex, totalCount } = await client.getVideos(effectiveParentId, selectedLib, feedType, skip, PAGE_SIZE, orientationMode, includeIds);
-          setVideos(prev => reset ? newVideos : [...prev, ...newVideos]);
-          setServerStartIndex(nextStartIndex);
-          setHasMore(nextStartIndex < totalCount);
+          const { items: newVideos, totalCount } = await client.getVideos(effectiveParentId, selectedLib, feedType, skip, PAGE_SIZE, orientationMode, includeIds);
+          setVideos(newVideos);
+          setHasMore(false);
           if (reset && effectiveParentId && newVideos.length > 0) {
               const type = (newVideos[0].Type || '').toLowerCase();
               if (['series', 'season', 'folder', 'boxset', 'show'].includes(type) && viewMode === 'feed') setViewMode('grid');

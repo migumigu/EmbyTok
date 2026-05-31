@@ -133,7 +133,7 @@ export class EmbyClient extends MediaClient {
         const rawItems = data.Items || [];
         const filteredItems = this.applyOrientationFilter(rawItems, orientationMode);
         
-        const items = filteredItems.slice(0, limit).map((item: any) => ({
+        const items = filteredItems.map((item: any) => ({
             ...item,
             Name: this.formatItemName(item),
             UserData: item.UserData ? {
