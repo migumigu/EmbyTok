@@ -8,32 +8,9 @@ interface LoginProps {
   onLogin: (config: ServerConfig) => void;
 }
 
-const CyberRabbitIcon = ({ type }: { type: ServerType }) => {
-  const isEmby = type === 'emby';
-  const colorLeft = isEmby ? "#25F4EE" : "#FF9500"; 
-  const colorRight = isEmby ? "#6366F1" : "#FE2C55";
-
+const CyberRabbitIcon = () => {
   return (
-    <svg viewBox="0 0 512 512" className="w-full h-full">
-      <defs>
-        <path id="rabbit-cute-path" d="
-          M 110 512 
-          C 110 380, 120 60, 200 60 
-          C 230 60, 240 160, 256 160 
-          C 272 160, 282 60, 312 60 
-          C 392 60, 402 380, 402 512
-        " fill="none" strokeWidth="24" strokeLinecap="round" strokeLinejoin="round" />
-      </defs>
-      <g transform="translate(-8, -3)" stroke={colorLeft} opacity="0.85">
-        <use href="#rabbit-cute-path" />
-      </g>
-      <g transform="translate(8, 3)" stroke={colorRight} opacity="0.85">
-        <use href="#rabbit-cute-path" />
-      </g>
-      <g stroke="#FFFFFF" strokeWidth="26">
-        <use href="#rabbit-cute-path" />
-      </g>
-    </svg>
+    <img src="/icons/icon-512x512.png" alt="EmbyTok" className="w-full h-full object-contain" />
   );
 };
 
@@ -159,8 +136,8 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
       
       <div className={`w-full max-w-6xl flex ${isLandscape ? 'flex-row items-center gap-16' : 'flex-col items-center'} animate-in fade-in zoom-in duration-700 relative z-10 flex-1`}>
         <div className={`flex flex-col items-center ${isLandscape ? 'w-2/5' : 'mb-8 text-center'}`}>
-            <div className="relative w-24 h-24 md:w-32 md:h-32 rounded-[30px] bg-black border border-white/20 shadow-2xl flex items-end justify-center overflow-hidden mb-6">
-                <CyberRabbitIcon type={serverType} />
+            <div className="relative w-24 h-24 md:w-32 md:h-32 mb-6 drop-shadow-[0_12px_36px_rgba(0,0,0,0.55)]">
+                <CyberRabbitIcon />
             </div>
             <h1 className="text-4xl md:text-5xl font-black mb-2">EmbyTok</h1>
             {isLandscape && isTV && (

@@ -1,6 +1,0 @@
-<svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
-  <rect width="200" height="200" fill="#000000"/>
-  <text x="100" y="100" font-family="Courier New" font-weight="bold" font-size="160" fill="#0000FF" text-anchor="middle" dominant-baseline="middle" dx="5" dy="5">K</text>
-  <text x="100" y="100" font-family="Courier New" font-weight="bold" font-size="160" fill="#00FF00" text-anchor="middle" dominant-baseline="middle" dx="0" dy="0">K</text>
-  <text x="100" y="100" font-family="Courier New" font-weight="bold" font-size="160" fill="#FF0000" text-anchor="middle" dominant-baseline="middle" dx="-5" dy="-5">K</text>
-</svg>

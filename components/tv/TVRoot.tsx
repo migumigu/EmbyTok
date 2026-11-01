@@ -15,10 +15,7 @@ interface TVRootProps {
 }
 
 const TVRabbitIcon = () => (
-  <svg viewBox="0 0 512 512" className="w-full h-full p-1 drop-shadow-sm">
-    <defs><path id="tv-rabbit-path" d="M 110 512 C 110 380, 120 60, 200 60 C 230 60, 240 160, 256 160 C 272 160, 282 60, 312 60 C 392 60, 402 380, 402 512" /></defs>
-    <use href="#tv-rabbit-path" fill="white" />
-  </svg>
+  <img src="/icons/icon-512x512.png" alt="EmbyTok" className="w-full h-full object-contain" />
 );
 
 function TVRoot({ onToggleMode }: TVRootProps) {
@@ -290,7 +287,7 @@ function TVRoot({ onToggleMode }: TVRootProps) {
                 ${shouldSidebarExpand ? 'w-48 px-1' : 'w-12 px-0'}
             `}
         >
-            <div className="w-12 flex justify-center mb-4 shrink-0"><div className="w-6 h-6 bg-indigo-600 rounded-lg flex items-center justify-center shadow-lg overflow-hidden"><TVRabbitIcon /></div></div>
+            <div className="w-12 flex justify-center mb-4 shrink-0"><div className="w-6 h-6 rounded-lg flex items-center justify-center shadow-lg overflow-hidden"><TVRabbitIcon /></div></div>
             <div className="flex-1 space-y-2 w-full overflow-hidden">
                 <NavItem 
                     id="nav-item-discover" 
